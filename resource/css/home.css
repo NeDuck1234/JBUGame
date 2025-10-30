@@ -1,0 +1,76 @@
+html, body {
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    background: #ffffff;
+
+    background-image: url("../img/all/background.jpg");
+    background-size: cover;
+    background-attachment: fixed;
+    backdrop-filter: blur(100px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/*
+.main-img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    display: block;
+}
+*/
+.phone {
+    width: min(90vw, 40vh);
+    aspect-ratio: 9 / 19.5;
+    background-image: url("../img/home/phone.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    z-index: 1;
+}
+
+.lock-img {
+    position: absolute;
+    top: 75%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 25%; /* 기존 60px에서 25%로 변경 --> height는 자동으로 맞춰짐 */
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+.lock-img:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.alarm{
+    position: absolute;
+    text-align: center;
+    top: 15%;
+    left: 25%;
+    width: 50%;
+    height: 3%;
+    
+    background-color: rgba(50, 50, 50, 0.5);
+
+    border-radius: 9999px;
+
+    color: white;
+    font-size: 2vh;
+}
+
+.logo{
+    position: absolute;
+    top: 20%;
+    left: 5%;
+    width: 10%;
+}
+
+.down{
+    position: absolute;
+    top: 30%;
+    right: 5%;
+    width: 10%;
+}

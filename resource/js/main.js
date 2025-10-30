@@ -1,0 +1,355 @@
+// 텍스트 리포지토리: name.txt / talk.txt 1회 로드 + 캐시
+class TalkRepository {
+  constructor() {
+    this.names = null;
+    this.talks = null;
+  }
+
+  async loadOnce() {
+    if (this.names && this.talks) return;
+    const [name_txt, talk_txt] = await Promise.all([
+      fetch('../talk/name.txt').then(r => {
+        if (!r.ok) throw new Error('name.txt failed');
+        return r.text();
+      }),
+      fetch('../talk/talk.txt').then(r => {
+        if (!r.ok) throw new Error('talk.txt failed');
+        return r.text();
+      })
+    ]);
+    const clean = (_t) => _t.replace(/^\uFEFF/, '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    this.names = clean(name_txt);
+    this.talks = clean(talk_txt);
+    if (!this.names.length || !this.talks.length) throw new Error('empty data');
+  }
+
+  getRandomName() {
+    const i = Math.floor(Math.random() * this.names.length);
+    return this.names[i];
+  }
+
+  getRandomTalk() {
+    const i = Math.floor(Math.random() * this.talks.length);
+    return this.talks[i];
+  }
+}
+
+// 게임 관리자?
+class GameManager{
+  constructor(_game_try_count){
+    this.game_try_count = _game_try_count;
+    this.message_count = 0;
+    this.exit_button =  document.getElementById('exit_button');
+  }
+
+  incressMessageCount(){
+    if(this.message_count > 10){
+      this.showExitButton();
+      return;
+    }
+    this.message_count++;
+  }
+
+  showExitButton(){
+    this.exit_button.hidden = false;
+    this.exit_button.addEventListener('click', () => this.goToHome());
+  }
+
+  goToHome(){
+    history.go(-1);
+  }
+}
+
+// 오디오 관리자?
+class AudioManager{
+  constructor(){
+    this.messages = new Array(10);
+    for(let i = 0; i < 10; i++){
+      //this.messages[i] = new Audio('../sound/se/message_1.mp3');
+      this.messages[i] = new Audio('../sound/se/message.mp3');
+      this.messages[i].volume = 0.5;
+    }
+    this.play_message_sound = 0;
+    this.unlock = new Audio('../sound/se/unlock.mp3');
+  }
+
+  messageAudioPlay(){
+    this.messages[this.play_message_sound].play();
+    this.play_message_sound++;
+    if(this.play_message_sound > 9) this.play_message_sound = 0
+  }
+
+  unlockAudioPlay(){
+    this.unlock.play();
+  }
+}
+
+// 메시지 DOM 생성 전용: 재사용 가능한 팩토리
+class MessageFactory {
+  createMine(_text) {
+    let td = document.createElement('td');
+    let msg = this._div('msg');
+    let content = this._div('content');
+    let bubble = this._div('bubble');
+
+    td.classList.add('message','me');
+    td.appendChild(msg);
+    msg.appendChild(content);
+    content.appendChild(bubble);
+    bubble.textContent = _text;
+    return td;
+  }
+
+  createOther(_name, _text) {
+    let td = document.createElement('td');
+    let msg = this._div('msg');
+    let avatar = this._div('avatar');
+    let content = this._div('content');
+    let name = this._div('name');
+    let bubble = this._div('bubble');
+
+    td.classList.add('message','other');
+    td.appendChild(msg);
+    msg.appendChild(avatar);
+    msg.appendChild(content);
+    content.appendChild(name);
+    content.appendChild(bubble);
+
+    avatar.textContent = (_name && _name[0]) ? _name[0] : '?';
+    name.textContent = _name || '익명';
+    bubble.textContent = _text || '...';
+    return td;
+  }
+
+  _div(_class) {
+    let div = document.createElement('div');
+    div.className = _class;
+    return div;
+  }
+}
+
+// 메시지 보관/표시 담당: 테이블 렌더와 큐 관리
+class MessageTableView {
+  constructor(_table_el, _max_messages) {
+    this.table_el = _table_el;
+    this.max_messages = _max_messages;
+    this.items = new Array(_max_messages);
+    for (let i = 0; i < _max_messages; i++) {
+      let td = document.createElement('td');
+      td.className = 'message';
+      this.items[i] = td;
+    }
+    this.sync();
+  }
+
+  push(_td) {
+    this.items.shift();
+    this.items.push(_td);
+    this.sync();
+  }
+
+  sync() {
+    const fragment = document.createDocumentFragment();
+    for (let i = 0; i < this.max_messages; i++) {
+      const tr = document.createElement('tr');
+      tr.appendChild(this.items[i]);
+      fragment.appendChild(tr);
+    }
+    this.table_el.replaceChildren(fragment);
+  }
+}
+
+// 전체 오케스트레이션: 이벤트, 입력 검증, 시나리오 타이밍
+class ChatController {
+  constructor(_els) {
+    this.audio_manager = new AudioManager();
+    
+    this.game_manager = _els.game_manager;
+    this.message_send_div = _els.message_send_div;
+    this.message_input = _els.message_input;
+    this.message_send = _els.message_send;
+
+    this.factory = new MessageFactory();
+    this.repo = new TalkRepository();
+    this.view = new MessageTableView(_els.message_table, 9);
+
+    this._auto_enabled = false;
+    this._auto_timer = null;
+
+    this._bindEvents();
+    this._startAutoPerpetrator(); // 앱 시작 시 자동 송출 루프 시작
+  }
+
+  _bindEvents() {
+    this.message_input.addEventListener('input', (e) => this._toggleSend(e.target));
+    this.message_send.addEventListener('click', () => this.messageSendMe());
+    document.addEventListener('keydown', (e) => {
+      if (e.isComposing) return;
+      if (e.key === 'Enter') this.messageSendMe();
+    });
+    this._toggleSend(this.message_input);
+  }
+
+  _toggleSend(_el) {
+    const has = !!(_el.value && _el.value.trim());
+    let phone = document.getElementById("phone");
+    if(has) phone.style.setProperty("background-image","url('../img/main/phone_sending.png')");
+    else phone.style.setProperty("background-image","url('../img/main/phone.png')");
+    // this.message_send_div.hidden = !has;
+  }
+
+  // 내 메시지 전송
+  messageSendMe() {
+    const text = this.message_input.value.trim();
+    if (!text) return;
+    const td = this.factory.createMine(text);
+    this.view.push(td);
+    this.message_input.value = '';
+    this._toggleSend(this.message_input);
+    // 자동 응답은 이제 타이머 루프가 담당하므로 여기서는 호출하지 않음
+  }
+
+  // 0.5~0.7초 랜덤 지연 생성
+  _randomDelayMs() {
+    return 200 + Math.floor(Math.random() * 201); // 500~700ms
+  }
+
+  // 자동 가해자 메시지 루프 시작
+  async _startAutoPerpetrator() {
+    if (this._auto_enabled) return;
+    this._auto_enabled = true;
+
+    // 텍스트 리포지토리 1회 로드 보장
+    await this.repo.loadOnce();
+
+    const tick = async () => {
+      if (!this._auto_enabled) return;
+
+      // 한 건 송출
+      const name = this.repo.getRandomName();
+      const talk = this.repo.getRandomTalk();
+      const td = this.factory.createOther(name, talk);
+      this.audio_manager.messageAudioPlay();
+      this.game_manager.incressMessageCount();
+      this.view.push(td);
+
+      // 다음 턴 예약
+      this._auto_timer = setTimeout(tick, this._randomDelayMs());
+    };
+
+    // 첫 턴 예약
+    this._auto_timer = setTimeout(tick, this._randomDelayMs());
+  }
+
+  // 필요 시 자동 송출 중지/재개 API
+  stopAutoPerpetrator() {
+    this._auto_enabled = false;
+    if (this._auto_timer) {
+      clearTimeout(this._auto_timer);
+      this._auto_timer = null;
+    }
+  }
+
+  resumeAutoPerpetrator() {
+    if (this._auto_enabled) return;
+    this._startAutoPerpetrator();
+  }
+
+  // 기존 데모용 단발 호출은 남겨두되 외부에서 쓸 수도 있으니 유지 (루프는 이걸 사용하지 않음)
+  async messageSendPerpetrator() {
+    await this.repo.loadOnce();
+    const name = this.repo.getRandomName();
+    const talk = this.repo.getRandomTalk();
+    const td = this.factory.createOther(name, talk);
+    this.view.push(td);
+  }
+}
+
+// 초기화 예시(적용 시점에 한 번만 호출)
+class InitPage{
+
+  constructor(){
+    let exit_button =  document.getElementById('exit_button');
+    exit_button.hidden = true;
+
+    this.playUnlockAudio();
+    this.game_manager = this.getCachData();
+    this.bootstrapChat();
+  }
+  
+  playUnlockAudio(){    
+    let audio_manager = new AudioManager();
+    audio_manager.unlockAudioPlay();
+  }
+
+  initTryCount(_key = "try_count") {
+    const record = { count: 1, updated_at: Date.now() };
+    localStorage.setItem(_key, JSON.stringify(record));
+    return 0;
+  }
+
+  incrementTryCount(_key = "try_count") {
+    const raw = localStorage.getItem(_key);
+    if (raw === null) {
+      return initTryCount(_key);
+    }
+
+    let parsed = null;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      parsed = null;
+    }
+
+    let next = 0;
+    if (parsed && typeof parsed.count === "number") {
+      next = parsed.count + 1;
+    } else if (!isNaN(Number(raw))) {
+      next = Number(raw) + 1;
+    } else {
+      next = 1;
+    }
+
+    localStorage.setItem(_key, JSON.stringify({ count: next, updated_at: Date.now() }));
+    return next;
+  }
+
+  getCachData(){
+    let cache_name = "try_count";
+
+    let raw = localStorage.getItem(cache_name);
+    let try_count = 0;
+
+    if (raw === null) {
+      try_count = this.initTryCount(cache_name);
+    } else {
+      try_count = this.incrementTryCount(cache_name);
+    }
+
+    let game_manager = new GameManager(try_count);
+    return game_manager;
+  }
+
+  bootstrapChat() {
+    // 0 <-- 채팅방을 얼마나 나갔는지 ==> 추후에 캐시로
+  
+    const els = {
+      message_send_div: document.getElementById('message_send_div'),
+      message_input: document.getElementById('message_input'),
+      message_send: document.getElementById('message_send'),
+      message_table: document.getElementById('message_table'),
+      game_manager: this.game_manager
+    };
+    return new ChatController(els);
+  }
+}
+
+function cachDel(_key = "try_count") {
+  localStorage.removeItem(_key);
+} // 디버그용 Console에 cachDel(); 작성  --> try_count 0으로 만듬
+
+function cachGet(_key = "try_count") {
+  console.log(localStorage.getItem(_key));
+} // 디버그용 
+
+new InitPage();

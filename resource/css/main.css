@@ -1,0 +1,215 @@
+
+html, body {
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #ffffff;
+
+    background-image: url("../img/all/background.jpg");
+    background-size: cover;
+    background-attachment: fixed;
+}
+
+/* 
+이미지 내부에
+코드를 추가하기 위해 div로 변경하면서
+img대신 background-image사용
+*/
+/*
+.main-img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    display: block;
+}
+*/
+.phone {
+  width: min(90vw, 40vh);
+  aspect-ratio: 9 / 19.5;
+  background-image: url('../img/main/phone.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  position: relative;            /* 자식 절대배치용 */
+  font-size: clamp(10px, 1.8vh, 18px); /* 내부 글자 크기 스케일 */
+}
+
+.input_talk {
+  position: absolute;
+  left: 17%;
+  width: 43%;
+  bottom: 7.8%;
+  height: 6.5%;
+  background-color: transparent;
+  outline: none;
+  border: none;
+  color: #ffffff;
+  box-sizing: border-box;
+}
+.message_send{
+  position: absolute;
+  left: 78%;
+  height: 3%;
+  bottom: 9.5%;
+  width: 15.5%;
+}
+.message_send_button{
+  position: absolute;
+  right: 5%;
+  width: 100%;
+  height: 100%;
+  outline: none;
+  border: none;
+  background-color: rgba(1, 1, 1, 0);
+  /* 이곳에 대충 적당한 이미지 넣으면 될듯? */
+}
+
+.message_screen{
+    position: absolute;
+    top: 15%;
+    left: 10%;
+    width: 80%;
+    height: 70%;
+    background-color: transparent;
+}
+
+/* ===== 조절용 변수 (전부 % 기준) =====
+   - 이 값들만 바꿔가며 미세 조정하면 됨
+*/
+:root{
+  --gap: 2%;              /* 아바타↔말풍선 사이 간격 */
+  --cell-pad-y: 1%;       /* 각 셀의 위아래 여백 */
+  --cell-pad-x: 2%;       /* 각 셀의 좌우 여백 */
+  --avatar-w: 9%;         /* 아바타 원의 지름(셀 너비 대비 %) */
+  --content-max: 90%;     /* 말풍선 컬럼의 최대 너비(나머지는 여백) */
+  --bubble-pad-y: 2%;   /* 말풍선 안쪽 위아래 패딩 */
+  --bubble-pad-x: 2%;   /* 말풍선 안쪽 좌우 패딩 */
+  --bubble-radius: 12%;   /* 말풍선 모서리 둥근 정도(%) */
+  --name-size: 80%;       /* 이름 글자 크기(부모 글자 대비 %) */
+  --avatar-font: 90%;     /* 아바타 안 물음표/이니셜 글자 크기(부모 대비 %) */
+
+  /* 색상 */
+  --bg-other: #111;       /* 상대 말풍선 배경 */
+  --bg-me: #3a6ff7;       /* 내 말풍선 배경 */
+  --bg-avatar: #2b2b2b;   /* 아바타 배경 */
+  --fg: #fff;             /* 기본 글자색 */
+  --name-color: #bdbdbd;  /* 이름 색 */
+}
+
+/* 테이블 전체 스케일은 기존 .message_screen 크기를 따름 */
+.message_table{
+  width: 100%;
+  height: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;        /* 셀 너비 안정화 */
+  background-color: transparent; /* 필요 시 배경 넣기 */
+}
+
+/* 한 줄(셀) 기본 여백과 정렬 */
+.message{
+    height: 10%;
+    padding: var(--cell-pad-y) var(--cell-pad-x);
+    vertical-align: top;        /* 말풍선을 위에 붙임 */
+    width: 100%;
+}
+
+/* 셀 내부 레이아웃: 아바타 + 콘텐츠 */
+.msg{
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gap);
+  width: 100%;
+}
+
+/* 아바타: 지름을 %로, 정원 유지 위해 aspect-ratio 사용 */
+.avatar{
+  width: var(--avatar-w);
+  aspect-ratio: 1 / 1;        /* 높이 자동 = 정원 */
+  border-radius: 50%;
+  background: var(--bg-avatar);
+  color: var(--fg);
+  display: grid;              /* 중앙정렬 */
+  place-items: center;
+  font-weight: 700;
+  font-size: var(--avatar-font);
+  flex: 0 0 var(--avatar-w);  /* 줄바꿈 방지 */
+}
+
+.content{
+  /* 한 줄 말줄임 설정 그대로 유지하면서 */
+  max-width: var(--content-max);
+  width: max-content;
+  min-width: 0;
+
+  flex: 0 1 var(--content-max);  /* ← 부모의 %만큼 차지하도록 */
+}
+
+
+/* 이름도 한 줄 */
+.name{
+  font-size: var(--name-size);
+  color: var(--name-color);
+  margin-bottom: 0.5%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 말풍선: 줄바꿈 금지 + 말줄임표 */
+.bubble{
+  background: var(--bg-other);
+  color: var(--fg);
+  padding: var(--bubble-pad-y) var(--bubble-pad-x);
+  border-radius: var(--bubble-radius);
+  line-height: 1.35;
+
+  width: max-content;
+  max-width: 70%;
+
+  white-space: nowrap;          /* ← 줄바꿈 안 함 */
+  overflow: hidden;             /* ← 넘치면 숨김 */
+  text-overflow: ellipsis;      /* ← 말줄임표 */
+}
+
+.message.me .msg{
+  justify-content: flex-end; /* 오른쪽 정렬 */
+  gap: 0;                    /* 아바타가 없으니 간격 제거 */
+}
+
+/* 말풍선 컬럼을 우측 끝으로 밀기 */
+.message.me .content{
+  margin-left: auto;         /* 컨텐츠 블록 자체를 오른쪽 끝으로 */
+}
+
+/* 말풍선 자체도 우측 정렬 보강(있어도 무해) */
+.message.me .bubble{
+  margin-left: auto;         /* 컨텐츠 내부에서 오른쪽으로 붙임 */
+  background: var(--bg-me);
+}
+
+
+/* 선택: 테이블 자체 배경/테두리 필요 시
+.message_table { background: rgba(255,255,255,.05); }
+*/
+
+.exit_button {
+  left: 25%;
+  bottom: 10%;
+  height: 6.5%;
+  position: absolute;
+  outline: transparent;
+  background-color: transparent;
+  width: 50%;
+  color: red;
+  background-color: rgba(255,0,0,0.25);
+  font-weight: 1000;
+
+  border: none;       /* 테두리 제거 */
+  padding: 0;         /* 내부 여백 제거 */
+  cursor: pointer;    /* 클릭 커서 */
+  font: inherit;      /* 폰트 상속 (일관성 유지용) */
+
+  z-index: 1;
+}

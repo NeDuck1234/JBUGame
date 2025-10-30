@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>시작 화면</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2b2929;
+      position: relative;
+    }
+    .main-img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+      display: block;
+    }
+    .lock-img {
+      position: absolute;
+      top: 75%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    .lock-img:hover {
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+  </style>
+</head>
+<body>
+  <!-- 메인 이미지 -->
+  <img class="main-img" src="Pill=False, Color=Midnight.png" alt="Midnight Pill" />
+
+  <!-- 잠금 로고  -->
+  <img class="lock-img" src="locklogo.png" alt="Lock Logo" onclick="unlock()" />
+
+  <script>
+    function unlock() {
+      window.location.href = "main.html";
+    }
+  </script>
+</body>
+</html>
