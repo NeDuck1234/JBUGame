@@ -33,7 +33,7 @@ class GameManager{
         alarm.style.transform = 'translateY(0)';
         alarm.style.opacity = '1';
 
-        // 2초 뒤 다시 올라가며 숨김
+        // 3초 뒤 다시 올라가며 숨김
         this.hide_timer = setTimeout(() => {
             alarm.style.transform = 'translateY(-140%)';
             alarm.style.opacity = '0';
@@ -43,7 +43,7 @@ class GameManager{
                 alarm.style.transition = '';
                 alarm.style.willChange = '';
             }, 320); // transition보다 살짝 길게
-        }, 2000);
+        }, 3000);
     }
 }
 

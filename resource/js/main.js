@@ -3,24 +3,66 @@ class TalkRepository {
   constructor() {
     this.names = null;
     this.talks = null;
+
+    this.story_talk_max = 0;
+    this.talk_index = 0;
+    this.is_story_end = false; // 원래 false
   }
 
   async loadOnce() {
     if (this.names && this.talks) return;
-    const [name_txt, talk_txt] = await Promise.all([
-      fetch('../talk/name.txt').then(r => {
+
+    const name_txt = await fetch('../talk/name.txt').then(r => {
         if (!r.ok) throw new Error('name.txt failed');
         return r.text();
-      }),
-      fetch('../talk/talk.txt').then(r => {
-        if (!r.ok) throw new Error('talk.txt failed');
-        return r.text();
-      })
-    ]);
+    });
+    const talk_txt = await this.getTalkTxt();
+    
     const clean = (_t) => _t.replace(/^\uFEFF/, '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+
     this.names = clean(name_txt);
     this.talks = clean(talk_txt);
+
+    this.story_talk_max = this.talks.length;
+
     if (!this.names.length || !this.talks.length) throw new Error('empty data');
+  }
+
+  getTalkTxt(){
+    let return_txt = null;
+
+    let raw = localStorage.getItem("try_count");
+    let talk_num = 1; // 기본값
+
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.count === "number") {
+          talk_num = parsed.count;
+        }
+      } catch (e) {
+        console.warn("try_count parse failed, fallback to 1");
+        talk_num = 1;
+      }
+    } else {
+      console.warn("try_count not found, initializing...");
+      localStorage.setItem("try_count", JSON.stringify({ count: 1, updated_at: Date.now() }));
+    }
+
+    if (talk_num > 5 || this.is_story_end){
+      return_txt = fetch('../talk/randomTalk.txt').then(r => {
+        if (!r.ok) throw new Error('randomTalk.txt failed');
+        return r.text();
+      });
+      return return_txt;
+    }
+
+    return_txt = fetch(`../talk/storyTalk${talk_num}.txt`).then(r => {
+      if (!r.ok) throw new Error(`storyTalk${talk_num}.txt failed`);
+      return r.text();
+    });
+
+    return return_txt;
   }
 
   getRandomName() {
@@ -32,18 +74,36 @@ class TalkRepository {
     const i = Math.floor(Math.random() * this.talks.length);
     return this.talks[i];
   }
+
+  async getStoryTalk() {
+    if(this.is_story_end){
+      return this.getRandomTalk();
+    }
+
+    let return_talk = this.talks[this.talk_index++];
+    
+    if (this.talk_index == this.story_talk_max){
+      this.is_story_end = true;
+      const talk_txt = await this.getTalkTxt();
+      const clean = (_t) => _t.replace(/^\uFEFF/, '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      this.talks = clean(talk_txt);
+    }
+
+    return return_talk;
+  }
 }
 
 // 게임 관리자?
 class GameManager{
-  constructor(_game_try_count){
+  constructor(_game_try_count,_story_talk_max){
     this.game_try_count = _game_try_count;
     this.message_count = 0;
     this.exit_button =  document.getElementById('exit_button');
+    this.story_talk_max = _story_talk_max;
   }
 
   incressMessageCount(){
-    if(this.message_count > 10){
+    if(this.message_count > this.story_talk_max+10){
       this.showExitButton();
       return;
     }
@@ -57,30 +117,6 @@ class GameManager{
 
   goToHome(){
     history.go(-1);
-  }
-}
-
-// 오디오 관리자?
-class AudioManager{
-  constructor(){
-    this.messages = new Array(10);
-    for(let i = 0; i < 10; i++){
-      //this.messages[i] = new Audio('../sound/se/message_1.mp3');
-      this.messages[i] = new Audio('../sound/se/message.mp3');
-      this.messages[i].volume = 0.5;
-    }
-    this.play_message_sound = 0;
-    this.unlock = new Audio('../sound/se/unlock.mp3');
-  }
-
-  messageAudioPlay(){
-    this.messages[this.play_message_sound].play();
-    this.play_message_sound++;
-    if(this.play_message_sound > 9) this.play_message_sound = 0
-  }
-
-  unlockAudioPlay(){
-    this.unlock.play();
   }
 }
 
@@ -162,9 +198,7 @@ class MessageTableView {
 // 전체 오케스트레이션: 이벤트, 입력 검증, 시나리오 타이밍
 class ChatController {
   constructor(_els) {
-    this.audio_manager = new AudioManager();
     
-    this.game_manager = _els.game_manager;
     this.message_send_div = _els.message_send_div;
     this.message_input = _els.message_input;
     this.message_send = _els.message_send;
@@ -177,7 +211,6 @@ class ChatController {
     this._auto_timer = null;
 
     this._bindEvents();
-    this._startAutoPerpetrator(); // 앱 시작 시 자동 송출 루프 시작
   }
 
   _bindEvents() {
@@ -215,22 +248,21 @@ class ChatController {
   }
 
   // 자동 가해자 메시지 루프 시작
-  async _startAutoPerpetrator() {
+  _startAutoPerpetrator(_game_manager) {
     if (this._auto_enabled) return;
     this._auto_enabled = true;
 
     // 텍스트 리포지토리 1회 로드 보장
-    await this.repo.loadOnce();
+    // await this.repo.loadOnce();
 
     const tick = async () => {
       if (!this._auto_enabled) return;
 
       // 한 건 송출
       const name = this.repo.getRandomName();
-      const talk = this.repo.getRandomTalk();
+      const talk = await this.repo.getStoryTalk();
       const td = this.factory.createOther(name, talk);
-      this.audio_manager.messageAudioPlay();
-      this.game_manager.incressMessageCount();
+      _game_manager.incressMessageCount();
       this.view.push(td);
 
       // 다음 턴 예약
@@ -257,9 +289,8 @@ class ChatController {
 
   // 기존 데모용 단발 호출은 남겨두되 외부에서 쓸 수도 있으니 유지 (루프는 이걸 사용하지 않음)
   async messageSendPerpetrator() {
-    await this.repo.loadOnce();
     const name = this.repo.getRandomName();
-    const talk = this.repo.getRandomTalk();
+    const talk = this.repo.getStoryTalk();
     const td = this.factory.createOther(name, talk);
     this.view.push(td);
   }
@@ -269,17 +300,19 @@ class ChatController {
 class InitPage{
 
   constructor(){
-    let exit_button =  document.getElementById('exit_button');
-    exit_button.hidden = true;
-
-    this.playUnlockAudio();
-    this.game_manager = this.getCachData();
-    this.bootstrapChat();
+    this.init();
   }
   
-  playUnlockAudio(){    
-    let audio_manager = new AudioManager();
-    audio_manager.unlockAudioPlay();
+  async init(){
+    let exit_button =  document.getElementById('exit_button');
+    exit_button.hidden = true;
+  
+    this.cc = this.bootstrapChat();
+    
+    await this.cc.repo.loadOnce();
+
+    this.game_manager = this.getCachData();
+    this.cc._startAutoPerpetrator(this.game_manager);
   }
 
   initTryCount(_key = "try_count") {
@@ -326,7 +359,7 @@ class InitPage{
       try_count = this.incrementTryCount(cache_name);
     }
 
-    let game_manager = new GameManager(try_count);
+    let game_manager = new GameManager(try_count,this.cc.repo.story_talk_max);
     return game_manager;
   }
 
@@ -337,8 +370,7 @@ class InitPage{
       message_send_div: document.getElementById('message_send_div'),
       message_input: document.getElementById('message_input'),
       message_send: document.getElementById('message_send'),
-      message_table: document.getElementById('message_table'),
-      game_manager: this.game_manager
+      message_table: document.getElementById('message_table')
     };
     return new ChatController(els);
   }
@@ -352,4 +384,4 @@ function cachGet(_key = "try_count") {
   console.log(localStorage.getItem(_key));
 } // 디버그용 
 
-new InitPage();
+let ip = new InitPage();
