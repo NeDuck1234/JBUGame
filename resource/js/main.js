@@ -198,53 +198,17 @@ class MessageTableView {
 // 전체 오케스트레이션: 이벤트, 입력 검증, 시나리오 타이밍
 class ChatController {
   constructor(_els) {
-    
-    this.message_send_div = _els.message_send_div;
-    this.message_input = _els.message_input;
-    this.message_send = _els.message_send;
-
     this.factory = new MessageFactory();
     this.repo = new TalkRepository();
     this.view = new MessageTableView(_els.message_table, 9);
 
     this._auto_enabled = false;
     this._auto_timer = null;
-
-    this._bindEvents();
   }
 
-  _bindEvents() {
-    this.message_input.addEventListener('input', (e) => this._toggleSend(e.target));
-    this.message_send.addEventListener('click', () => this.messageSendMe());
-    document.addEventListener('keydown', (e) => {
-      if (e.isComposing) return;
-      if (e.key === 'Enter') this.messageSendMe();
-    });
-    this._toggleSend(this.message_input);
-  }
-
-  _toggleSend(_el) {
-    const has = !!(_el.value && _el.value.trim());
-    let phone = document.getElementById("phone");
-    if(has) phone.style.setProperty("background-image","url('../img/main/phone_sending.png')");
-    else phone.style.setProperty("background-image","url('../img/main/phone.png')");
-    // this.message_send_div.hidden = !has;
-  }
-
-  // 내 메시지 전송
-  messageSendMe() {
-    const text = this.message_input.value.trim();
-    if (!text) return;
-    const td = this.factory.createMine(text);
-    this.view.push(td);
-    this.message_input.value = '';
-    this._toggleSend(this.message_input);
-    // 자동 응답은 이제 타이머 루프가 담당하므로 여기서는 호출하지 않음
-  }
-
-  // 0.5~0.7초 랜덤 지연 생성
+  // 0.2~1초 랜덤 지연 생성
   _randomDelayMs() {
-    return 200 + Math.floor(Math.random() * 1000); // 500~700ms
+    return 200 + Math.floor(Math.random() * 1000);
   }
 
   // 자동 가해자 메시지 루프 시작
@@ -252,28 +216,23 @@ class ChatController {
     if (this._auto_enabled) return;
     this._auto_enabled = true;
 
-    // 텍스트 리포지토리 1회 로드 보장
-    // await this.repo.loadOnce();
-
     const tick = async () => {
       if (!this._auto_enabled) return;
 
-      // 한 건 송출
       const name = this.repo.getRandomName();
       const talk = await this.repo.getStoryTalk();
       const td = this.factory.createOther(name, talk);
       _game_manager.incressMessageCount();
       this.view.push(td);
 
-      // 다음 턴 예약
+      // 다음 메시지 예약
       this._auto_timer = setTimeout(tick, this._randomDelayMs());
     };
 
-    // 첫 턴 예약
+    // 첫 메시지 예약
     this._auto_timer = setTimeout(tick, this._randomDelayMs());
   }
 
-  // 필요 시 자동 송출 중지/재개 API
   stopAutoPerpetrator() {
     this._auto_enabled = false;
     if (this._auto_timer) {
@@ -282,17 +241,9 @@ class ChatController {
     }
   }
 
-  resumeAutoPerpetrator() {
+  resumeAutoPerpetrator(_game_manager) {
     if (this._auto_enabled) return;
-    this._startAutoPerpetrator();
-  }
-
-  // 기존 데모용 단발 호출은 남겨두되 외부에서 쓸 수도 있으니 유지 (루프는 이걸 사용하지 않음)
-  async messageSendPerpetrator() {
-    const name = this.repo.getRandomName();
-    const talk = this.repo.getStoryTalk();
-    const td = this.factory.createOther(name, talk);
-    this.view.push(td);
+    this._startAutoPerpetrator(_game_manager);
   }
 }
 
