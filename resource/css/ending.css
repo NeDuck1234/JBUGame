@@ -1,0 +1,51 @@
+body{
+    background-color: black;
+    overflow:hidden
+}
+
+.click_to_next{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+}
+
+.scene {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 75vmin;
+    height: 75vmin;
+
+    transform: translate(-50%, -50%);
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+}
+
+.scene_1{
+    background-image: url("../img/ending/scene1.png");
+}
+.scene_2{
+    background-image: url("../img/ending/scene2.png");
+}
+.scene_3{
+    background-image: url("../img/ending/scene3.png");
+}
+
+.scene_4{
+    background-color: black;
+}
+.scene_4_text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  width: max-content;        /* 내용에 맞춰 너비를 자동으로 */
+  font-size: 5vh;
+  color: white;
+
+  white-space: normal;       /* br 유지됨 */
+  text-align: center;        /* 다줄 텍스트 중앙정렬 */
+}

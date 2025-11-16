@@ -10,6 +10,7 @@ html, body {
     background-image: url("../img/all/background.jpg");
     background-size: cover;
     background-attachment: fixed;
+    overflow:hidden
 }
 
 /* 
@@ -234,4 +235,12 @@ img대신 background-image사용
   font: inherit;      /* 폰트 상속 (일관성 유지용) */
 
   z-index: 1;
+}
+
+.fade_out{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0);
+  z-index: 5;
 }

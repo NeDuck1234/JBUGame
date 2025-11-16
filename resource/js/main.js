@@ -125,7 +125,6 @@ class GameManager{
       this.exit_button.style.backgroundColor = `rgba(${200},${50},${50},${0.75})`
     }
 
-
     this.exit_button.hidden = false;
     this.exit_button.addEventListener('click', () => this.goToHome());
   }
@@ -135,7 +134,19 @@ class GameManager{
   }
 
   goToEnding(){
-    console.log(1);
+    let fade_out = document.getElementById("fade_out");
+    fade_out.hidden = false;
+    this.fade_out = 0;
+    this.fadeOut(fade_out);
+  }
+
+  fadeOut(fade_out){
+    if (this.fade_out >= 1){
+      window.location.href = "ending.html";
+    }
+    this.fade_out += 0.0001
+    fade_out.style.backgroundColor = `rgba(0,0,0,${this.fade_out})`
+    setTimeout(() => this.fadeOut(fade_out), 1);
   }
 }
 

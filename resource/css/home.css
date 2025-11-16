@@ -12,6 +12,7 @@ html, body {
     background-attachment: fixed;
     backdrop-filter: blur(100px);
     -webkit-backdrop-filter: blur(10px);
+    overflow:hidden
 }
 
 /*
