@@ -99,6 +99,7 @@ class GameManager{
     this.game_try_count = _game_try_count;
     this.message_count = 0;
     this.exit_button =  document.getElementById('exit_button');
+    this.ending_button =  document.getElementById('ending_button');
     this.story_talk_max = _story_talk_max;
   }
 
@@ -111,12 +112,30 @@ class GameManager{
   }
 
   showExitButton(){
+    let count = JSON.parse(localStorage.getItem("try_count")).count;
+    if(count > 5){
+      this.ending_button.hidden = false;
+      this.ending_button.addEventListener('click', () => this.goToEnding());
+      return;
+    }
+
+    if(count < 4){
+      this.exit_button.style.backgroundColor = `rgba(${150},${100},${100},${0.5})`
+    }else{
+      this.exit_button.style.backgroundColor = `rgba(${200},${50},${50},${0.75})`
+    }
+
+
     this.exit_button.hidden = false;
     this.exit_button.addEventListener('click', () => this.goToHome());
   }
 
   goToHome(){
     history.go(-1);
+  }
+
+  goToEnding(){
+    console.log(1);
   }
 }
 
@@ -208,7 +227,7 @@ class ChatController {
 
   // 0.2~1초 랜덤 지연 생성
   _randomDelayMs() {
-    return 200 + Math.floor(Math.random() * 1000);
+    return 200 + Math.floor(Math.random() * 100);
   }
 
   // 자동 가해자 메시지 루프 시작
@@ -257,6 +276,9 @@ class InitPage{
   async init(){
     let exit_button =  document.getElementById('exit_button');
     exit_button.hidden = true;
+
+    let ending_button =  document.getElementById('ending_button');
+    ending_button.hidden = true;
   
     this.cc = this.bootstrapChat();
     
