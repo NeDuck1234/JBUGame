@@ -238,7 +238,7 @@ class ChatController {
 
   // 0.2~1초 랜덤 지연 생성
   _randomDelayMs() {
-    return 200 + Math.floor(Math.random() * 100);
+    return 200 + Math.floor(Math.random() * 1000);
   }
 
   // 자동 가해자 메시지 루프 시작
