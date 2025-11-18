@@ -144,7 +144,7 @@ class GameManager{
     if (this.fade_out >= 1){
       window.location.href = "ending.html";
     }
-    this.fade_out += 0.0001
+    this.fade_out += 0.005
     fade_out.style.backgroundColor = `rgba(0,0,0,${this.fade_out})`
     setTimeout(() => this.fadeOut(fade_out), 1);
   }

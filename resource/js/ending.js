@@ -10,9 +10,16 @@ class Scene{
     }
 
     nextScene(){
-        if (this.can_click)
+        if (!this.can_click){
+            return;
+        }
         this.count += 1;
-        
+
+        if(this.count == 5){
+            let c2nt = document.getElementById("click_to_next_text");
+            c2nt.remove();
+        }
+
         this.scene = document.getElementById(`scene_${this.count}`);
         this.opacity = 0;
         this.showScene();

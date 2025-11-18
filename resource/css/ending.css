@@ -49,3 +49,39 @@ body{
   white-space: normal;       /* br 유지됨 */
   text-align: center;        /* 다줄 텍스트 중앙정렬 */
 }
+
+.scene_5{
+    position: absolute;
+    left: 90%;
+    top: 80%;
+    width: 25vmin;
+    height: 25vmin;
+
+    transform: translate(-50%, -50%);
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    background-image: url("../img/ending/scene5.png");
+}
+.scene_5_text {
+  position: absolute;
+  top: 110%;
+  left: 53%;
+  transform: translate(-50%, -50%);
+
+  width: max-content;        /* 내용에 맞춰 너비를 자동으로 */
+  font-size: 2vh;
+  color: white;
+
+  white-space: normal;       /* br 유지됨 */
+  text-align: center;        /* 다줄 텍스트 중앙정렬 */
+}
+
+.click_to_next_text{
+    position: absolute;
+    color: gray;
+    top: 90%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+}
