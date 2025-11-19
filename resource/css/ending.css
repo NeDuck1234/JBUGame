@@ -10,6 +10,7 @@ body{
     font-display: swap;
 }
 
+
 .click_to_next{
   position: absolute;
   width: 100%;
@@ -93,4 +94,23 @@ body{
     left: 50%;
     font-size: 1vw;
     transform: translate(-50%, -50%);
+}
+
+
+/* 화면 폭 768px 이하 → 모바일로 간주 */
+@media screen and (max-width: 768px) {
+    .scene_5 {
+        right: 50%;
+        bottom: 15%;
+        transform: translate(50%, 0);   /* 화면 하단 중앙 */
+        width: 40vmin;                  /* 모바일에서는 조금 크게 */
+        height: 40vmin;
+    }
+
+    .scene_5_text {
+        top: 110%;
+        left: 50%;
+        transform: translate(-50%, 0);
+        font-size: 4vw;                 /* 글씨도 조금 크게 */
+    }
 }
