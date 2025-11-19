@@ -60,8 +60,8 @@ body{
 
 .scene_5{
     position: absolute;
-    right: 5vw;
-    top: 80%;
+    right: 2vw;
+    bottom: -5%;
     width: 27vmin;
     height: 27vmin;
 
@@ -89,7 +89,8 @@ body{
 .click_to_next_text{
     position: absolute;
     color: gray;
-    top: 90%;
+    bottom: 5%;
     left: 50%;
+    font-size: 1vw;
     transform: translate(-50%, -50%);
 }
