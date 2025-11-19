@@ -6,12 +6,6 @@ class Scene{
         this.click.addEventListener('click', () => this.nextScene());
         this.can_click = true;
 
-        let scene_5 = document.getElementById("scene_5");
-        scene_5.addEventListener("click", () => {
-            console.log(1);
-            location.href = "https://forms.gle/9QeH4EZFfzExSTxK7"; 
-        });
-
         localStorage.removeItem("try_count");
     }
 
@@ -23,8 +17,10 @@ class Scene{
 
         if(this.count == 5){
             let c2nt = document.getElementById("click_to_next_text");
-            c2nt.remove();
-            this.click.remove();
+            c2nt.innerText = "클릭해서 설문조사 진행"
+        }
+        if(this.count == 6){
+            location.href = "https://forms.gle/9QeH4EZFfzExSTxK7"; 
         }
 
         this.scene = document.getElementById(`scene_${this.count}`);
