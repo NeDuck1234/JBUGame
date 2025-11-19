@@ -141,6 +141,7 @@ class GameManager{
   }
 
   fadeOut(fade_out){
+    console.log(this.fade_out);
     if (this.fade_out >= 1){
       window.location.href = "ending.html";
     }
