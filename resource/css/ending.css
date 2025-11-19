@@ -3,6 +3,13 @@ body{
     overflow:hidden
 }
 
+@font-face {
+    font-family: JoseonPalace;
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunGs.woff') format('woff');
+    font-weight: normal;
+    font-display: swap;
+}
+
 .click_to_next{
   position: absolute;
   width: 100%;
@@ -37,13 +44,14 @@ body{
     background-color: black;
 }
 .scene_4_text {
+  font-family: JoseonPalace;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
 
   width: max-content;        /* 내용에 맞춰 너비를 자동으로 */
-  font-size: 5vh;
+  font-size: 4vw;
   color: white;
 
   white-space: normal;       /* br 유지됨 */
@@ -52,10 +60,10 @@ body{
 
 .scene_5{
     position: absolute;
-    left: 90%;
+    right: 5vw;
     top: 80%;
-    width: 25vmin;
-    height: 25vmin;
+    width: 30vmin;
+    height: 30vmin;
 
     transform: translate(-50%, -50%);
     background-size: cover;
@@ -63,14 +71,15 @@ body{
     opacity: 0;
     background-image: url("../img/ending/scene5.png");
 }
+
 .scene_5_text {
   position: absolute;
   top: 110%;
-  left: 53%;
+  left: 50%;
   transform: translate(-50%, -50%);
 
   width: max-content;        /* 내용에 맞춰 너비를 자동으로 */
-  font-size: 2vh;
+  font-size: 2vw;
   color: white;
 
   white-space: normal;       /* br 유지됨 */
@@ -83,5 +92,4 @@ body{
     top: 90%;
     left: 50%;
     transform: translate(-50%, -50%);
-
 }
