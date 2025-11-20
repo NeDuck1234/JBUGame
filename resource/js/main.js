@@ -126,7 +126,7 @@ class GameManager{
     }
 
     this.exit_button.hidden = false;
-    this.ending_button.onclick = () => this.goToEnding();
+    this.exit_button.addEventListener("click",() => this.goToHome());
   }
 
   goToHome(){
@@ -140,26 +140,23 @@ class GameManager{
     this.fadeOut(fade_out);
   }
 
-    fadeOut(fade_out_el) {
-      if (this._fade_running) return;
+  fadeOut() {
+      if (this._fade_running) return;   // 중복 방지
       this._fade_running = true;
 
       const tick = () => {
-          this.fade_out += 0.01;
-
-          fade_out_el.style.backgroundColor = `rgba(0,0,0,${this.fade_out})`;
-
-          if (this.fade_out >= 1) {
+          if (this.fade_out >= 1){
               window.location.href = "ending.html";
               return;
           }
 
+          this.fade_out += 0.01;
+          fade_out.style.backgroundColor = `rgba(0,0,0,${this.fade_out})`;
           requestAnimationFrame(tick);
       };
 
       requestAnimationFrame(tick);
   }
-
 }
 
 // 메시지 DOM 생성 전용: 재사용 가능한 팩토리
