@@ -126,7 +126,7 @@ class GameManager{
     }
 
     this.exit_button.hidden = false;
-    this.exit_button.addEventListener('click', () => this.goToHome());
+    this.ending_button.onclick = () => this.goToEnding();
   }
 
   goToHome(){
@@ -140,14 +140,22 @@ class GameManager{
     this.fadeOut(fade_out);
   }
 
-  fadeOut(fade_out){
-    console.log(this.fade_out);
-    if (this.fade_out >= 1){
-      window.location.href = "ending.html";
-    }
-    this.fade_out += 0.005
-    fade_out.style.backgroundColor = `rgba(0,0,0,${this.fade_out})`
-    setTimeout(() => this.fadeOut(fade_out), 1);
+  fadeOut() {
+      if (this._fade_running) return;   // 중복 방지
+      this._fade_running = true;
+
+      const tick = () => {
+          if (this.fade_out >= 1){
+              window.location.href = "ending.html";
+              return;
+          }
+
+          this.fade_out += 0.01;
+          fade_out.style.backgroundColor = `rgba(0,0,0,${this.fade_out})`;
+          requestAnimationFrame(tick);
+      };
+
+      requestAnimationFrame(tick);
   }
 }
 
